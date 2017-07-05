@@ -67,6 +67,8 @@ class DuplicatedCrashesTest(TestCase):
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             auto_delete_duplicate_crashes()
 
+        self.assertRaises(Crash.DoesNotExist, Crash.objects.get, id=deleted_crash.id)
+        self.assertEqual(Crash.objects.count(), 2)
         self.assertEqual(mocked_logger.info.call_count, 10)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
@@ -96,6 +98,8 @@ class OldObjectsTest(TestCase):
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             auto_delete_older_than()
 
+        self.assertRaises(Crash.DoesNotExist, Crash.objects.get, id=deleted_crash.id)
+        self.assertEqual(Crash.objects.count(), 0)
         self.assertEqual(mocked_logger.info.call_count, 11)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
@@ -122,6 +126,8 @@ class OldObjectsTest(TestCase):
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             auto_delete_older_than()
 
+        self.assertRaises(Feedback.DoesNotExist, Feedback.objects.get, id=deleted_feedback.id)
+        self.assertEqual(Feedback.objects.count(), 0)
         self.assertEqual(mocked_logger.info.call_count, 11)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
@@ -152,6 +158,8 @@ class SizeExceedTest(TestCase):
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             auto_delete_size_is_exceeded()
 
+        self.assertRaises(Crash.DoesNotExist, Crash.objects.get, id=deleted_crash.id)
+        self.assertEqual(Crash.objects.count(), 102)
         self.assertEqual(mocked_logger.info.call_count, 99)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
@@ -179,6 +187,9 @@ class SizeExceedTest(TestCase):
         with patch('uuid.uuid4') as mocked_uuid4:
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             auto_delete_size_is_exceeded()
+
+        self.assertRaises(Feedback.DoesNotExist, Feedback.objects.get, id=deleted_feedback.id)
+        self.assertEqual(Feedback.objects.count(), 102)
         self.assertEqual(mocked_logger.info.call_count, 99)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
@@ -193,7 +204,6 @@ class ManualCleanupTest(TestCase):
         crashes = CrashFactory.create_batch(10, signature='test')
         deleted_crash = crashes[7]
         self.assertEqual(Crash.objects.count(), 10)
-
         extra_meta = dict(count=8, reason='manual', meta=True, log_id='36446dc3-ae7c-42ad-ae4e-6a826dcf0a00',
                           model='Crash', limit_duplicated=2, limit_size=None, limit_days=None, size='0 bytes')
         log_extra_msg = add_extra_to_log_message('Manual cleanup', extra=extra_meta)
@@ -208,6 +218,8 @@ class ManualCleanupTest(TestCase):
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             deferred_manual_cleanup(['crash', 'Crash'], limit_duplicated=2)
 
+        self.assertRaises(Crash.DoesNotExist, Crash.objects.get, id=deleted_crash.id)
+        self.assertEqual(Crash.objects.count(), 2)
         self.assertEqual(mocked_logger.info.call_count, 10)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
@@ -235,6 +247,8 @@ class ManualCleanupTest(TestCase):
         with patch('uuid.uuid4') as mocked_uuid4:
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             deferred_manual_cleanup(['feedback', 'Feedback'], limit_size=1)
+        self.assertRaises(Feedback.DoesNotExist, Feedback.objects.get, id=deleted_feedback.id)
+        self.assertEqual(Feedback.objects.count(), 10)
         self.assertEqual(mocked_logger.info.call_count, 11)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
@@ -244,7 +258,7 @@ class ManualCleanupTest(TestCase):
     @is_private()
     def test_symbols(self, mocked_get_logger):
         storage_with_spaces_instance._setup()
-        gpm['Feedback__limit_size'] = 1
+        gpm['Symbols__limit_size'] = 1
         symbols_size = 100*1024*1023
         symbols = SymbolsFactory.create_batch(20, file_size=symbols_size)
         deleted_symbols = symbols[7]
@@ -258,10 +272,11 @@ class ManualCleanupTest(TestCase):
                      log_id='36446dc3-ae7c-42ad-ae4e-6a826dcf0a00')
         log_msg = add_extra_to_log_message('Manual cleanup element', extra=extra)
         mocked_logger = mocked_get_logger.return_value
-
         with patch('uuid.uuid4') as mocked_uuid4:
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             deferred_manual_cleanup(['crash', 'Symbols'], limit_size=1)
+        self.assertRaises(Symbols.DoesNotExist, Symbols.objects.get, id=deleted_symbols.id)
+        self.assertEqual(Symbols.objects.count(), 10)
         self.assertEqual(mocked_logger.info.call_count, 11)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
@@ -288,6 +303,9 @@ class ManualCleanupTest(TestCase):
         with patch('uuid.uuid4') as mocked_uuid4:
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             deferred_manual_cleanup(['omaha', 'Version'], limit_size=1)
+
+        self.assertRaises(Version.DoesNotExist, Version.objects.get, id=deleted_version.id)
+        self.assertEqual(Version.objects.count(), 1)
         self.assertEqual(mocked_logger.info.call_count, 2)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
@@ -314,6 +332,9 @@ class ManualCleanupTest(TestCase):
         with patch('uuid.uuid4') as mocked_uuid4:
             mocked_uuid4.side_effect = (uuid.UUID('36446dc3-ae7c-42ad-ae4e-6a826dcf0a%02d' % x) for x in range(100))
             deferred_manual_cleanup(['sparkle', 'SparkleVersion'], limit_size=1)
+
+        self.assertRaises(SparkleVersion.DoesNotExist, SparkleVersion.objects.get, id=deleted_version.id)
+        self.assertEqual(SparkleVersion.objects.count(), 1)
         self.assertEqual(mocked_logger.info.call_count, 2)
         mocked_logger.info.assert_any_call(log_extra_msg)
         mocked_logger.info.assert_any_call(log_msg)
