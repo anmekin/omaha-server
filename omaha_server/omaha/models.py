@@ -320,6 +320,14 @@ class AppRequest(models.Model):
 def pre_version_save(sender, instance, *args, **kwargs):
     if instance.pk:
         old = sender.objects.get(pk=instance.pk)
+        import logging
+        logger = logging.getLogger('zero_size')
+        logger.info("Old file instance : %s " % old.file)
+        logger.info("New file instance : %s " % instance.file)
+        logger.info("Old file size : %s " % old.file.size)
+        logger.info("New file size : %s " % instance.file.size)
+        logger.info("Old file cursor : %s " % old.file.size)
+        logger.info("New file cursor : %s " % instance.file.size)
         if old.file == instance.file:
             return
         else:
