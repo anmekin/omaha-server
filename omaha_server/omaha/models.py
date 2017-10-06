@@ -137,10 +137,7 @@ class Version(BaseModel):
     @property
     def file_package_name(self):
         url = furl(self.file_absolute_url)
-        package_url = os.path.basename(url.pathstr)
-        if url.query:
-            package_url += r'?%s' % (url.query)
-        return package_url
+        return os.path.basename(url.pathstr)
 
     @property
     def file_url(self):
@@ -149,6 +146,11 @@ class Version(BaseModel):
             return '%s://%s:%d%s/' % (url.scheme, url.host, url.port, os.path.dirname(url.pathstr))
         else:
             return '%s://%s%s/' % (url.scheme, url.host, os.path.dirname(url.pathstr))
+
+    @property
+    def url_parameters(self):
+        url = furl(self.file_absolute_url)
+        return str(url.query)
 
     @property
     def size(self):

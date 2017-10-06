@@ -60,6 +60,7 @@ class TestRequestScheme(TestCase, XmlTestMixin):
         size='23963192',
         hash='VXriGUVI0TNqfLlU02vBel4Q3Zo=',
         fp='fp',
+        url_parameters = 'signature=1&test=2',
     )
 
     action_attr = dict(
