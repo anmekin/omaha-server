@@ -151,6 +151,11 @@ class Version(BaseModel):
             return '%s://%s%s/' % (url.scheme, url.host, os.path.dirname(url.pathstr))
 
     @property
+    def url_parameters(self):
+        url = furl(self.file_absolute_url)
+        return url.query
+
+    @property
     def size(self):
          return self.file_size
 

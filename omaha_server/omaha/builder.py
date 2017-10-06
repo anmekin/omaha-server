@@ -160,6 +160,7 @@ def on_app(apps_list, app, os, userid):
                 version=str(version.version),
                 packages=Packages([Package(
                     name=version.file_package_name,
+                    parameters=version.url_parameters,
                     required='true',
                     size=str(version.file_size),
                     hash=version.file_hash,
